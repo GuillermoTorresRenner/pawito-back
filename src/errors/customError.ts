@@ -1,4 +1,4 @@
-import logger from "./logger"
+import logger from "./logger";
 
 export abstract class CustomError extends Error {
   statusCode: number;
@@ -11,7 +11,10 @@ export abstract class CustomError extends Error {
     this.logError(`${new Date().toLocaleDateString()} | Error Type: ${this.name} | Status Code: ${this.statusCode} | Message: ${this.message} | Stack: ${this.stack}`);
   }
 
-  abstract logError(logData: string): void;
+  logError(logData: string): void{
+        logger.error(logData);
+
+  };
 }
 
 export class NotFoundError extends CustomError {
@@ -19,10 +22,6 @@ export class NotFoundError extends CustomError {
     super(message, 404);
   }
 
-  logError(logData: string): void {
-    // Cambia a logger.error para mantener consistencia con otros errores
-    logger.error(logData);
-  }
 }
 
 export class BadRequestError extends CustomError {
@@ -30,9 +29,7 @@ export class BadRequestError extends CustomError {
     super(message, 400);
   }
 
-  logError(logData: string): void {
-    logger.error(logData);
-  }
+  
 }
 
 export class UnauthorizedError extends CustomError {
@@ -40,9 +37,7 @@ export class UnauthorizedError extends CustomError {
     super(message, 401);
   }
 
-  logError(logData: string): void {
-    logger.error(logData);
-  }
+  
 }
 
 export class ForbiddenError extends CustomError {
@@ -50,9 +45,7 @@ export class ForbiddenError extends CustomError {
     super(message, 403);
   }
 
-  logError(logData: string): void {
-    logger.error(logData);
-  }
+  
 }
 
 export class InternalServerError extends CustomError {
@@ -60,7 +53,13 @@ export class InternalServerError extends CustomError {
     super(message, 500);
   }
 
-  logError(logData: string): void {
-    logger.error(logData);
+  
+}
+
+export class UserCreatedError extends CustomError {
+  constructor(message = "User already registered") {
+    super(message, 409); // Cambiado a 409 Conflict
   }
+
+ 
 }

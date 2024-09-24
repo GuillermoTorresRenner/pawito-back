@@ -37,4 +37,20 @@ export class UserService {
 async updateLastConnection(userID: string) {
   return await this.usersRepository.updateLastConnection(userID);
 }
+
+ async findOrCreateGoogleUser(profile: any) {
+  console.log(profile)
+    let user = await this.usersRepository.findByEmail(profile.emails[0].value);
+    if (!user) {
+      user = await this.usersRepository.create({
+        name: profile.name.givenName,
+        surname: profile.name.familyName,
+        email: profile.emails[0].value,
+        password: "",
+        avatar: profile.photos[0].value,
+      });
+    }
+    return user;
+  }
+
 }

@@ -26,4 +26,6 @@ select:{role:true}});
 async updateLastConnection(userID: string): Promise<Users> {
         return await this.prisma.users.update({ where: { userID }, data: { lastConnection: new Date() } });
     }
+
+  
 }

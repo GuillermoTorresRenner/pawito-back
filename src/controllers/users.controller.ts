@@ -1,10 +1,10 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { UserService } from '../services/users.service';
 import { UsersCreateDTO } from '../../types/users.dto';
-import { InternalServerError, NotFoundError, CustomError } from '../errors/customError';
-import { validationResult } from 'express-validator';
+import { InternalServerError, NotFoundError, CustomError, UserCreatedError } from '../errors/customError';
 import { comparePassword } from '../utils/passwords';
 import { generateToken } from '../validations/token';
+import passport from '../utils/passport.config';
 
 export class UsersController {
   private userService: UserService;
@@ -14,32 +14,30 @@ export class UsersController {
   }
 
   public async register(req: Request, res: Response): Promise<Response> {
-    try {
-      const result = validationResult(req);
-      if (!result.isEmpty()) {
-        return res.send({ errors: result.array() });
-      }
-      const user: UsersCreateDTO = req.body;
-      const createdUser = await this.userService.createUser(user);
-      if (!createdUser) {
-        throw new InternalServerError("Error creating user");
-      }
-      return res.status(201).json(createdUser);
-    } catch (error: any) {
-      if (error instanceof InternalServerError) {
-        return res.status(error.statusCode).json({ message: error.message });
-      }
-      return res.status(500).json({ message: "Internal Server Error" });
+  try {
+    const user: UsersCreateDTO = req.body;
+    const isUserRegistered = await this.userService.getUserByEmail(user.email);
+
+    if (isUserRegistered) {
+      throw new UserCreatedError("User already registered");
     }
+
+    const createdUser = await this.userService.createUser(user);
+    if (!createdUser) throw new InternalServerError("Error creating user");
+
+    return res.status(201).json(createdUser);
+  } catch (error: any) {
+    if (error instanceof CustomError) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+
+    return res.status(500).json({ message: "Internal Server Error", error });
   }
+}
 
   public async login(req: Request, res: Response) {
     try {
-      /**
-       * Dependiendo del negocio se puede aaplicar una validacion de 
-       * 3 intentos fallidos y bloquear la cuenta por un tiempo
-       * 
-       */
+      
       const { email, password } = req.body;
       const user = await this.userService.getUserByEmail(email);
       if (!user) throw new NotFoundError("User or password incorrect");
@@ -79,4 +77,29 @@ export class UsersController {
       return res.status(500).json({ message: "Internal Server Error" });
     }
   }
+
+  public googleAuth = passport.authenticate('google', { scope: ['profile', 'email'] });
+ public googleCallback = (req: Request, res: Response, next: NextFunction) => {
+    passport.authenticate('google', (err:any, user:any, _info:any) => {
+      if (err) {
+        return next(err);
+      }
+      if (!user) {
+        return res.redirect('/');
+      }
+      const { token } = user;
+      res.cookie('jwt', token, { httpOnly: true, secure: true });
+
+    //Manejar el redireccionamiento
+      // res.json({ message: 'Authentication successful'});
+      res.redirect(process.env.APP_URL as string);
+    })(req, res, next);
+  };
+
+  public handleGoogleCallback = (req: Request, res: Response) => {
+    const { token } = req.user as any;
+    res.cookie('jwt', token, { httpOnly: true, secure: true });
+    res.redirect('/profile');
+  };
+
 }

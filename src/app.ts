@@ -3,6 +3,7 @@ import morgan from "morgan";
 import dotenv from "dotenv";
 import cookieParser = require("cookie-parser");
 import {Routes} from "./routes";
+import passport from "./utils/passport.config"
 dotenv.config();
 
 const app = express();
@@ -15,6 +16,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("tiny"));
  app.use(cookieParser());
+ app.use(passport.initialize());
 // Integracion de rutas
 app.use("/api", routes);
 
