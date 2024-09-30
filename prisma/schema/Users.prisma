@@ -4,8 +4,12 @@ model Users {
     password       String
     name           String
     surname        String
-    region         String?
-    commune        String?
+    countryID      String
+    country        Countries @relation(fields: [countryID], references: [countryID])
+    regionID       String?
+    region         Regions?  @relation(fields: [regionID], references: [regionID])
+    communeID      Int?
+    commune        Communes? @relation(fields: [communeID], references: [communeID])
     street         String?
     number         String?
     dpto           String?

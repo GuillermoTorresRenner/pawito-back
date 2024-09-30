@@ -1,0 +1,10 @@
+model Communes {
+    communeID Int       @id @default(autoincrement())
+    name      String
+    regionID  String
+    region    Regions   @relation(fields: [regionID], references: [regionID])
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+    Users     Users[]
+}

@@ -1,25 +1,25 @@
-import express from "express";
-import morgan from "morgan";
-import dotenv from "dotenv";
-import cookieParser = require("cookie-parser");
-import {Routes} from "./routes";
-import passport from "./utils/passport.config"
-dotenv.config();
+import express from 'express'
+import morgan from 'morgan'
+import dotenv from 'dotenv'
+import cookieParser = require('cookie-parser')
+import { Routes } from './routes'
+import passport from './utils/passport.config'
+dotenv.config()
 
-const app = express();
+const app = express()
 
 // inicialización de variables de entorno
-const PORT = process.env.PORT as string;
-const routes = new Routes().router;
+const PORT = process.env.PORT as string
+const routes = new Routes().router
 // Declaración de middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(morgan("tiny"));
- app.use(cookieParser());
- app.use(passport.initialize());
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
+app.use(morgan('tiny'))
+app.use(cookieParser())
+app.use(passport.initialize())
 // Integracion de rutas
-app.use("/api", routes);
+app.use('/api', routes)
 
 app.listen(PORT, () => {
-  console.log(`Server running on port  ${PORT}`);
-});
+  console.log(`Server running on port  ${PORT}`)
+})

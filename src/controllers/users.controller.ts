@@ -1,105 +1,102 @@
-import { Request, Response, NextFunction } from 'express';
-import { UserService } from '../services/users.service';
-import { UsersCreateDTO } from '../../types/users.dto';
-import { InternalServerError, NotFoundError, CustomError, UserCreatedError } from '../errors/customError';
-import { comparePassword } from '../utils/passwords';
-import { generateToken } from '../validations/token';
-import passport from '../utils/passport.config';
+import { Request, Response, NextFunction } from 'express'
+import { UserService } from '../services/users.service'
+import { UsersCreateDTO } from '../../types/users.dto'
+import { InternalServerError, NotFoundError, CustomError, UserCreatedError } from '../errors/customError'
+import { comparePassword } from '../utils/passwords'
+import { generateToken } from '../validations/token'
+import passport from '../utils/passport.config'
 
 export class UsersController {
-  private userService: UserService;
+  private readonly userService: UserService
 
-  constructor(userService: UserService) {
-    this.userService = userService;
+  constructor (userService: UserService) {
+    this.userService = userService
   }
 
-  public async register(req: Request, res: Response): Promise<Response> {
-  try {
-    const user: UsersCreateDTO = req.body;
-    const isUserRegistered = await this.userService.getUserByEmail(user.email);
-
-    if (isUserRegistered) {
-      throw new UserCreatedError("User already registered");
-    }
-
-    const createdUser = await this.userService.createUser(user);
-    if (!createdUser) throw new InternalServerError("Error creating user");
-
-    return res.status(201).json(createdUser);
-  } catch (error: any) {
-    if (error instanceof CustomError) {
-      return res.status(error.statusCode).json({ message: error.message });
-    }
-
-    return res.status(500).json({ message: "Internal Server Error", error });
-  }
-}
-
-  public async login(req: Request, res: Response) {
+  public async register (req: Request, res: Response): Promise<Response> {
     try {
-      
-      const { email, password } = req.body;
-      const user = await this.userService.getUserByEmail(email);
-      if (!user) throw new NotFoundError("User or password incorrect");
-      const validPassword = comparePassword(password, user.password);
-      if (!validPassword) throw new NotFoundError("User or password incorrect");
-      const token = generateToken(user);
-      await this.userService.updateLastConnection(user.userID);
-      return res.cookie('token', token, { httpOnly: true }).json({ message: "Login successful" });
+      const user: UsersCreateDTO = req.body
+      const isUserRegistered = await this.userService.getUserByEmail(user.email)
+
+      if (isUserRegistered != null) {
+        throw new UserCreatedError('User already registered')
+      }
+
+      const createdUser = await this.userService.createUser(user)
+      if (createdUser == null) throw new InternalServerError('Error creating user')
+
+      return res.status(201).json(createdUser)
+    } catch (error: any) {
+      if (error instanceof CustomError) {
+        return res.status(error.statusCode).json({ message: error.message })
+      }
+
+      return res.status(500).json({ message: 'Internal Server Error', error })
+    }
+  }
+
+  public async login (req: Request, res: Response): Promise<Response> {
+    try {
+      const { email, password } = req.body
+      const user = await this.userService.getUserByEmail(email)
+      if (user == null) throw new NotFoundError('User or password incorrect')
+      const validPassword = comparePassword(password, user.password)
+      if (!validPassword) throw new NotFoundError('User or password incorrect')
+      const token = generateToken(user)
+      await this.userService.updateLastConnection(user.userID)
+      return res.cookie('token', token, { httpOnly: true }).json({ message: 'Login successful' })
     } catch (error) {
       if (error instanceof CustomError) {
-        return res.status(error.statusCode).json({ message: error.message });
+        return res.status(error.statusCode).json({ message: error.message })
       }
-      return res.status(500).json({ message: "Internal Server Error" });
+      return res.status(500).json({ message: 'Internal Server Error' })
     }
   }
 
-  public async whoami(req: Request, res: Response) {
+  public async whoami (req: Request, res: Response): Promise<Response> {
     try {
-   
-       const user = await this.userService.getUserById(req.userID||"");
-      if (user===null) throw new NotFoundError("User not found");
-      return res.json(user);
+      const userID = req.userID ?? ''
+      const user = await this.userService.getUserById(userID)
+      if (user === null) throw new NotFoundError('User not found')
+      return res.json(user)
     } catch (error) {
       if (error instanceof CustomError) {
-         res.status(error.statusCode).json({ message: error.message });
-        
+        res.status(error.statusCode).json({ message: error.message })
       }
-      return res.status(500).json({ message: "Internal Server Error" });
+      return res.status(500).json({ message: 'Internal Server Error' })
     }
   }
 
-  async logout(_req: Request, res: Response) {
+  async logout (_req: Request, res: Response): Promise<Response> {
     try {
-      res.clearCookie('token').json({ message: "Logout successful" });
-      return res.status(200);
+      res.clearCookie('token').json({ message: 'Logout successful' })
+      return res.status(200)
     } catch (error) {
-      return res.status(500).json({ message: "Internal Server Error" });
+      return res.status(500).json({ message: 'Internal Server Error' })
     }
   }
 
-  public googleAuth = passport.authenticate('google', { scope: ['profile', 'email'] });
- public googleCallback = (req: Request, res: Response, next: NextFunction) => {
-    passport.authenticate('google', (err:any, user:any, _info:any) => {
-      if (err) {
-        return next(err);
+  public googleAuth = passport.authenticate('google', { scope: ['profile', 'email'] })
+  public googleCallback = (req: Request, res: Response, next: NextFunction): void => {
+    passport.authenticate('google', (err: any, user: any, _info: any) => {
+      if (err != null) {
+        return next(err)
       }
-      if (!user) {
-        return res.redirect('/');
+      if (user == null) {
+        return res.redirect('/')
       }
-      const { token } = user;
-      res.cookie('jwt', token, { httpOnly: true, secure: true });
+      const { token } = user
+      res.cookie('jwt', token, { httpOnly: true, secure: true })
 
-    //Manejar el redireccionamiento
+      // Manejar el redireccionamiento
       // res.json({ message: 'Authentication successful'});
-      res.redirect(process.env.APP_URL as string);
-    })(req, res, next);
-  };
+      res.redirect(process.env.APP_URL as string)
+    })(req, res, next)
+  }
 
-  public handleGoogleCallback = (req: Request, res: Response) => {
-    const { token } = req.user as any;
-    res.cookie('jwt', token, { httpOnly: true, secure: true });
-    res.redirect('/profile');
-  };
-
+  public handleGoogleCallback = (req: Request, res: Response): void => {
+    const { token } = req.user as any
+    res.cookie('jwt', token, { httpOnly: true, secure: true })
+    res.redirect('/profile')
+  }
 }

@@ -1,39 +1,39 @@
 // src/middlewares/auth.middleware.ts
-import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import { UnauthorizedError } from '../errors/customError';
-import { UserService } from '../services/users.service';
-import { UsersRepository } from '../repositories/users.repository';
-import logger from '../errors/logger';
+import { Request, Response, NextFunction } from 'express'
+import jwt from 'jsonwebtoken'
+import { UnauthorizedError } from '../errors/customError'
+import { UserService } from '../services/users.service'
+import { UsersRepository } from '../repositories/users.repository'
+import logger from '../errors/logger'
 
 interface JwtPayload {
-  id: string;
+  id: string
 }
 
 export const AuthMiddleware = async (req: Request, res: Response, next: NextFunction) => {
-  const authHeader = req.headers.authorization;
+  const authHeader = req.headers.authorization
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ message: 'No autorizado, token no proporcionado' });
+    return res.status(401).json({ message: 'No autorizado, token no proporcionado' })
   }
 
-  const token = authHeader.split(' ')[1];
+  const token = authHeader.split(' ')[1]
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
-    if (!decoded) throw new UnauthorizedError('Token no válido');
-  
-    const userService = new UserService(new UsersRepository());
-    const role = await userService.getRoleByID(decoded.id);
-    if (!role) throw new UnauthorizedError('Usuario no encontrado');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload
+    if (!decoded) throw new UnauthorizedError('Token no válido')
 
-     req.userID = decoded.id; 
-     req.userRole = role ;
+    const userService = new UserService(new UsersRepository())
+    const role = await userService.getRoleByID(decoded.id)
+    if (role == null) throw new UnauthorizedError('Usuario no encontrado')
 
-    next();
-    return null;
+    req.userID = decoded.id
+    req.userRole = role
+
+    next()
+    return null
   } catch (error: any) {
-    logger.error(`${new Date().toLocaleDateString()} | Error Type: ${error.name} | Status Code: ${403} | Message: ${error.message} | Stack: ${error.stack}`);
-    return res.status(403).json({ message: 'Token no válido' });
+    logger.error(`${new Date().toLocaleDateString()} | Error Type: ${error.name} | Status Code: ${403} | Message: ${error.message} | Stack: ${error.stack}`)
+    return res.status(403).json({ message: 'Token no válido' })
   }
-};
+}

@@ -1,0 +1,12 @@
+model Regions {
+    regionID    String     @id
+    romanNumber String
+    name        String
+    countryID   String
+    country     Countries  @relation(fields: [countryID], references: [countryID])
+    createdAt   DateTime   @default(now())
+    updatedAt   DateTime   @updatedAt
+    deletedAt   DateTime?
+    Communes    Communes[]
+    Users       Users[]
+}

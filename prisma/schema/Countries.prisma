@@ -1,0 +1,6 @@
+model Countries {
+    countryID String    @id
+    name      String
+    Regions   Regions[]
+    Users     Users[]
+}
