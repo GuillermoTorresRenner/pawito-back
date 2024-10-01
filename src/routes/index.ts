@@ -10,7 +10,7 @@ export class Routes {
     this.initializeRoutes()
   }
 
-  private initializeRoutes () {
+  private initializeRoutes (): void {
     // Registrar todas las rutas aquí
     this.router.use('/auth', new UsersRoutes().router) // Rutas de usuario
   }

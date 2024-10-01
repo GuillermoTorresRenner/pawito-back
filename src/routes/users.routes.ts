@@ -19,12 +19,14 @@ export class UsersRoutes {
   }
 
   // Método para inicializar las rutas
-  private initializeRoutes () {
+
+  private initializeRoutes (): void {
     this.router.post('/register', validateRequest(ValidationRegisterRules), this.userController.register.bind(this.userController))
     this.router.post('/login', validateRequest(ValidationLoginRules), this.userController.login.bind(this.userController))
     this.router.get('/whoami', AuthMiddleware, this.userController.whoami.bind(this.userController))
     this.router.get('/logout', AuthMiddleware, this.userController.logout.bind(this.userController))
     this.router.get('/google', this.userController.googleAuth)
     this.router.get('/google/callback', this.userController.googleCallback, this.userController.handleGoogleCallback)
+    this.router.put('/', AuthMiddleware, this.userController.update.bind(this.userController))
   }
 }

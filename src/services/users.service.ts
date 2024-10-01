@@ -1,6 +1,7 @@
 import { UsersRepository } from '../repositories/users.repository'
 import { UsersCreateDTO, UsersWhoamiDTO } from '../../types/users.dto'
 import { hashPassword } from '../utils/passwords'
+import { Users } from '@prisma/client'
 export class UserService {
   private readonly usersRepository: UsersRepository
 
@@ -8,45 +9,48 @@ export class UserService {
     this.usersRepository = usersRepository
   }
 
-  async createUser (user: UsersCreateDTO) {
+  async createUser (user: UsersCreateDTO): Promise<UsersCreateDTO> {
     user.password = hashPassword(user.password)
     return await this.usersRepository.create(user)
   }
 
-  async getUserByEmail (email: string) {
+  async getUserByEmail (email: string): Promise<Users | null> {
     return await this.usersRepository.findByEmail(email)
   }
 
-  async getRoleByID (userID: string) {
-    return await this.usersRepository.findRoleByID(userID)
-  }
-
-  async getUserById (userID: string) {
+  async getUserById (userID: string): Promise<UsersWhoamiDTO> {
     const user = await this.usersRepository.findById(userID)
     const userDTO: UsersWhoamiDTO = {
-      name: user?.name || '',
-      surname: user?.surname || '',
-      email: user?.email || ''
+      name: user?.name as string,
+      surname: user?.surname as string,
+      email: user?.email as string
     }
     return userDTO
   }
 
-  async updateLastConnection (userID: string) {
+  async updateLastConnection (userID: string): Promise<Users> {
     return await this.usersRepository.updateLastConnection(userID)
   }
 
-  async findOrCreateGoogleUser (profile: any) {
+  async getRoleByID (userID: string): Promise<Users | null> {
+    return await this.usersRepository.findUserRolebyId(userID)
+  }
+
+  async findOrCreateGoogleUser (profile: any): Promise<Users> {
     console.log(profile)
-    let user = await this.usersRepository.findByEmail(profile.emails[0].value)
+    let user = await this.usersRepository.findByEmail(profile.emails[0].value) as UsersCreateDTO
     if (user == null) {
       user = await this.usersRepository.create({
         name: profile.name.givenName,
         surname: profile.name.familyName,
         email: profile.emails[0].value,
-        password: '',
-        avatar: profile.photos[0].value
+        password: ''
       })
     }
-    return user
+    return user as Users
+  }
+
+  async updateUser (userID: string, data: Users): Promise<Users> {
+    return await this.usersRepository.updateUser(userID, data)
   }
 }

@@ -25,7 +25,7 @@ export class UsersController {
       const createdUser = await this.userService.createUser(user)
       if (createdUser == null) throw new InternalServerError('Error creating user')
 
-      return res.status(201).json(createdUser)
+      return res.status(201).json({ message: 'User created successfully' })
     } catch (error: any) {
       if (error instanceof CustomError) {
         return res.status(error.statusCode).json({ message: error.message })
@@ -98,5 +98,22 @@ export class UsersController {
     const { token } = req.user as any
     res.cookie('jwt', token, { httpOnly: true, secure: true })
     res.redirect('/profile')
+  }
+
+  public async update (req: Request, res: Response): Promise<Response> {
+    try {
+      const data = req.body
+      const userID = req.userID ?? ''
+      const foundedUser = await this.userService.getUserById(userID)
+      if (foundedUser == null) throw new NotFoundError('User not found')
+      const updatedUser = await this.userService.updateUser(userID, data)
+      if (updatedUser == null) throw new InternalServerError('Error updating user')
+      return res.json({ message: 'User updated successfully' })
+    } catch (error) {
+      if (error instanceof CustomError) {
+        return res.status(error.statusCode).json({ message: error.message })
+      }
+      return res.status(500).json({ message: 'Internal Server Error', error })
+    }
   }
 }
